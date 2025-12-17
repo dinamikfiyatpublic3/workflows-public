@@ -1,0 +1,77 @@
+name: supabase_timestamp_update_weekend
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubicloud-standard-2
+    timeout-minutes: 60
+
+    env:
+      PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}
+      PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}
+      PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}
+      PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
+      PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
+      PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
+      PROXY_IP: ${{ secrets.PROXY_IP }}
+      PROXY_PORT: ${{ secrets.PROXY_PORT }}
+      PROXY_USER: ${{ secrets.PROXY_USER }}
+      PROXY_PASS: ${{ secrets.PROXY_PASS }}
+      PG_SCRPEANT: ${{ secrets.PG_SCRPEANT }}
+      PG_DB_USER: ${{ secrets.PG_DB_USER }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      PG_HOST: ${{ secrets.PG_HOST }}
+      PG_PORT: ${{ secrets.PG_PORT }}
+      PG_NAME: ${{ secrets.PG_NAME }}
+      PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
+      PG_PROXYRACK_USERNAME: ${{ secrets.PG_PROXYRACK_USERNAME }}
+      PG_PROXYRACK_PASSWORD: ${{ secrets.PG_PROXYRACK_PASSWORD }}
+      MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }} 
+      NODE_OPTIONS: --unhandled-rejections=strict
+
+    strategy:
+      matrix:
+        script: [
+          "tests/supabase_timestamp_update_weekend.mjs"
+        ]
+
+    steps:
+      # Private repo'dan kod çek veya güncelle
+      - name: Get/Update private code
+        run: |
+          if [ -d "/opt/anlik_guncel" ]; then
+            cd /opt/anlik_guncel
+            git pull https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git main || {
+              cd /opt
+              rm -rf anlik_guncel
+              git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git
+            }
+          else
+            git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /opt/anlik_guncel
+          fi
+
+      # Node.js kurulumu
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Dependencies kur (cache'den)
+      - name: Install dependencies
+        working-directory: /opt/anlik_guncel
+        run: npm ci --prefer-offline || npm install
+
+      # Chrome kur
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
+
+      # Scraper çalıştır
+      - name: Run scraper
+        working-directory: /opt/anlik_guncel
+        run: |
+          echo "Running scraper: ${{ matrix.script }}"
+          node "./${{ matrix.script }}"

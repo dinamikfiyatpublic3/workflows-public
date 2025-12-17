@@ -1,0 +1,104 @@
+name: supabase_mail_send
+on:
+  workflow_dispatch:
+jobs:
+  scrape:
+    runs-on: ubicloud-standard-2
+    env:
+      CI: true
+      TZ: Europe/Istanbul
+      LANG: tr_TR.UTF-8
+      LC_ALL: tr_TR.UTF-8
+      LANGUAGE: tr_TR:tr
+      PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}
+      PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}
+      PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}
+      PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
+      PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
+      PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
+      PROXY_IP: ${{ secrets.PROXY_IP }}
+      PROXY_PORT: ${{ secrets.PROXY_PORT }}
+      PROXY_USER: ${{ secrets.PROXY_USER }}
+      PROXY_PASS: ${{ secrets.PROXY_PASS }}
+      PG_SCRPEANT: ${{ secrets.PG_SCRPEANT }}
+      PG_DB_USER: ${{ secrets.PG_DB_USER }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      PG_HOST: ${{ secrets.PG_HOST }}
+      PG_PORT: ${{ secrets.PG_PORT }}
+      PG_NAME: ${{ secrets.PG_NAME }}
+      PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
+      PG_PROXYRACK_USERNAME: ${{ secrets.PG_PROXYRACK_USERNAME }}
+      PG_PROXYRACK_PASSWORD: ${{ secrets.PG_PROXYRACK_PASSWORD }}
+      MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      GMAIL_USER: ${{ secrets.GMAIL_USER }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+      NODE_OPTIONS: --unhandled-rejections=strict
+    strategy:
+      matrix:
+        script: [
+          "tests/mail_send.mjs"
+        ]
+    steps:
+      - name: Kod checkout
+        uses: actions/checkout@v4
+        
+      # ✅ DEBUG: Secrets kontrolü
+      - name: 🔍 Environment Variables Debug
+        run: |
+          echo "=== SECRETS KONTROLÜ ==="
+          echo "GMAIL_USER mevcut mu: $(if [ -z '${{ secrets.GMAIL_USER }}' ]; then echo '❌ YOK'; else echo '✅ VAR'; fi)"
+          echo "GMAIL_APP_PASSWORD mevcut mu: $(if [ -z '${{ secrets.GMAIL_APP_PASSWORD }}' ]; then echo '❌ YOK'; else echo '✅ VAR'; fi)"
+          echo "PG_SUPABASEURL mevcut mu: $(if [ -z '${{ secrets.PG_SUPABASEURL }}' ]; then echo '❌ YOK'; else echo '✅ VAR'; fi)"
+          echo "PG_SUPABASEKEY mevcut mu: $(if [ -z '${{ secrets.PG_SUPABASEKEY }}' ]; then echo '❌ YOK'; else echo '✅ VAR'; fi)"
+          echo ""
+          echo "=== ENVIRONMENT VARIABLES ==="
+          echo "GMAIL_USER: $GMAIL_USER"
+          echo "GMAIL_APP_PASSWORD uzunluğu: $(echo $GMAIL_APP_PASSWORD | wc -c)"
+          echo "Çalışma dizini: $(pwd)"
+          echo "Dosyalar:"
+          ls -la
+          
+      - name: Node.js kurulumu
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          
+      - name: Locale + bağımlılık kurulumu
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y locales tzdata
+          # Locale ayarları (Türkiye PC ortamına tam uyumlu)
+          sudo locale-gen tr_TR.UTF-8
+          sudo update-locale LANG=tr_TR.UTF-8 LC_ALL=tr_TR.UTF-8 LANGUAGE=tr_TR:tr
+          export LANG=tr_TR.UTF-8
+          export LC_ALL=tr_TR.UTF-8
+          export LANGUAGE=tr_TR:tr
+          # Saat dilimi Türkiye
+          sudo timedatectl set-timezone Europe/Istanbul
+          date
+          
+      - name: Node bağımlılıkları yükle
+        run: |
+          npm ci
+          npm install exceljs
+          npm install nodemailer
+          
+      # ✅ DEBUG: Dosya kontrolü
+      - name: 🔍 Dosya Kontrolü
+        run: |
+          echo "=== DOSYA KONTROLÜ ==="
+          echo "tests/ klasörü var mı:"
+          ls -la tests/ || echo "❌ tests/ klasörü yok"
+          echo ""
+          echo "tests/mail_send.mjs var mı:"
+          ls -la tests/mail_send.mjs || echo "❌ tests/mail_send.mjs yok"
+          
+      - name: Scraper çalıştır
+        run: |
+          echo "▶️ Çalıştırılıyor: ${{ matrix.script }}"
+          # Timeout ekle (5 dakika)
+          timeout 300 node "./${{ matrix.script }}" || {
+            echo "❌ Script timeout oldu veya hata verdi"
+            exit 1
+          }

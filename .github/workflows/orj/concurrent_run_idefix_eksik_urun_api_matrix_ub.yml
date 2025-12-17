@@ -1,0 +1,69 @@
+name: concurrent_run_idefix_eksik_urun_api_matrix_ub
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    # runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
+
+    env:
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}
+      PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
+      PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}
+      PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}
+      PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
+      PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
+      PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
+      PROXY_IP: ${{ secrets.PROXY_IP }}
+      PROXY_PORT: ${{ secrets.PROXY_PORT }}
+      PROXY_USER: ${{ secrets.PROXY_USER }}
+      PROXY_PASS: ${{ secrets.PROXY_PASS }}
+      PG_SCRPEANT: ${{ secrets.PG_SCRPEANT }} 
+      NODE_OPTIONS: --unhandled-rejections=strict
+
+    strategy:
+      matrix:
+        script: [
+              "scrape_api_idefix_eksik_concurrent1.mjs",
+              "scrape_api_idefix_eksik_concurrent2.mjs",
+              "scrape_api_idefix_eksik_concurrent3.mjs",
+              "scrape_api_idefix_eksik_concurrent4.mjs",
+              "scrape_api_idefix_eksik_concurrent5.mjs",
+              "scrape_api_idefix_eksik_concurrent6.mjs",
+              "scrape_api_idefix_eksik_concurrent7.mjs",
+              "scrape_api_idefix_eksik_concurrent8.mjs",
+              "scrape_api_idefix_eksik_concurrent9.mjs",
+              "scrape_api_idefix_eksik_concurrent10.mjs",
+              "scrape_api_idefix_eksik_concurrent11.mjs",
+              "scrape_api_idefix_eksik_concurrent12.mjs",
+              "scrape_api_idefix_eksik_concurrent13.mjs",
+              "scrape_api_idefix_eksik_concurrent14.mjs"
+
+        ]
+
+    steps:
+     
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chrome and Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb google-chrome-stable
+
+      - name: Run scraper with Xvfb
+        run: |
+          echo "Running scraper: ${{ matrix.script }}"
+          xvfb-run -a node idefix_eksik_urunler/${{ matrix.script }}

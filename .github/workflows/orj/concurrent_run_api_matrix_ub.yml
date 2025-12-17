@@ -1,0 +1,104 @@
+name: concurrent_run_api_matrix_ub
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubicloud-standard-2
+
+    env:
+      CI: true
+      TZ: Europe/Istanbul
+      LANG: tr_TR.UTF-8
+      LC_ALL: tr_TR.UTF-8
+      LANGUAGE: tr_TR:tr
+      PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}
+      PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}
+      PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}
+      PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
+      PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
+      PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
+      PROXY_IP: ${{ secrets.PROXY_IP }}
+      PROXY_PORT: ${{ secrets.PROXY_PORT }}
+      PROXY_USER: ${{ secrets.PROXY_USER }}
+      PROXY_PASS: ${{ secrets.PROXY_PASS }}
+      PG_SCRPEANT: ${{ secrets.PG_SCRPEANT }}
+      PG_DB_USER: ${{ secrets.PG_DB_USER }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      PG_HOST: ${{ secrets.PG_HOST }}
+      PG_PORT: ${{ secrets.PG_PORT }}
+      PG_NAME: ${{ secrets.PG_NAME }}
+      PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
+      PG_PROXYRACK_USERNAME: ${{ secrets.PG_PROXYRACK_USERNAME }}
+      PG_PROXYRACK_PASSWORD: ${{ secrets.PG_PROXYRACK_PASSWORD }}
+      MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      NODE_OPTIONS: --unhandled-rejections=strict
+
+    strategy:
+      matrix:
+        script: [
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_1.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_2.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_3.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_4.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_5.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_6.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_7.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_8.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_9.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_10.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_11.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_12.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_13.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_14.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_15.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_16.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_17.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_18.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_19.mjs",
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_20.mjs"
+        ]
+
+    steps:
+      - name: Kod checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js kurulumu
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Locale + bağımlılık kurulumu
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            locales tzdata xvfb libnss3 libxss1 libasound2t64 fonts-liberation \
+            libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libgbm1 libnspr4 \
+            libxcomposite1 libxrandr2 libxdamage1 libxfixes3 \
+            libpango-1.0-0 libpangocairo-1.0-0 libgtk-3-0
+        
+          # Locale ayarları (Türkiye PC ortamına tam uyumlu)
+          sudo locale-gen tr_TR.UTF-8
+          sudo update-locale LANG=tr_TR.UTF-8 LC_ALL=tr_TR.UTF-8 LANGUAGE=tr_TR:tr
+          export LANG=tr_TR.UTF-8
+          export LC_ALL=tr_TR.UTF-8
+          export LANGUAGE=tr_TR:tr
+        
+          # Saat dilimi Türkiye
+          sudo timedatectl set-timezone Europe/Istanbul
+          date
+
+      - name: Node bağımlılıkları yükle
+        run: npm ci
+
+      - name: Chrome yükle
+        uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
+
+      - name: Scraper çalıştır
+        run: |
+          echo "▶️ Çalıştırılıyor: ${{ matrix.script }}"
+          xvfb-run -a node "./${{ matrix.script }}"
