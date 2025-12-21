@@ -48,5 +48,6 @@ jobs:
           PG_NAME: ${{ secrets.PG_NAME }}
           PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
           MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          MY_GITHUB_TOKEN_ALL: ${{ secrets.MY_GITHUB_TOKEN_ALL }} 
         run: |
           python ./tests/otomatik_api_akakce_ub_updated.py
