@@ -6,7 +6,7 @@ on:
 jobs:
   run-python-script:
     runs-on: ubicloud-standard-2
-    timeout-minutes: 120
+    timeout-minutes: 60
 
     steps:
       # Private repo'dan kod çek/güncelle
@@ -38,7 +38,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       # Script çalıştır
-      - name: Run otomatik_api_akakce_ub_0_restart.py
+      - name: Run otomatik_api_akakce_ub_0_restart_updated.py
         working-directory: /opt/anlik_guncel
         env:
           PG_DB_USER: ${{ secrets.PG_DB_USER }}
@@ -49,4 +49,4 @@ jobs:
           PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
           MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          python ./tests/otomatik_api_akakce_ub_0_restart.py
+          python ./tests/otomatik_api_akakce_ub_0_restart_updated.py
