@@ -49,4 +49,5 @@ jobs:
           PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
           MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          python ./tests/otomatik_ana_api_akakce_ub.py
+          python ./tests/otomatik_ana_api_akakce_ub_updated.py
+                         
