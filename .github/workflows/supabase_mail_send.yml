@@ -28,7 +28,9 @@ jobs:
       PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
       PG_PROXYRACK_USERNAME: ${{ secrets.PG_PROXYRACK_USERNAME }}
       PG_PROXYRACK_PASSWORD: ${{ secrets.PG_PROXYRACK_PASSWORD }}
-      MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }} 
+      MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      GMAIL_USER: ${{ secrets.GMAIL_USER }}                   
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}    
       NODE_OPTIONS: --unhandled-rejections=strict
 
     strategy:
