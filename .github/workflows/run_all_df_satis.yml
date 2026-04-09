@@ -1,0 +1,52 @@
+name: run_all_df_satis
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-python-script:
+    runs-on: ubicloud-standard-2
+    timeout-minutes: 60
+
+    steps:
+      # Private repo'dan kod çek/güncelle
+      - name: Get/Update private code
+        run: |
+          if [ -d "/opt/anlik_guncel" ]; then
+            cd /opt/anlik_guncel
+            git pull https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git main || {
+              cd /opt
+              rm -rf anlik_guncel
+              git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git
+            }
+          else
+            git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /opt/anlik_guncel
+          fi
+
+      # Python setup
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # Dependencies
+      - name: Install dependencies
+        working-directory: /opt/anlik_guncel
+        run: |
+          python -m pip install --upgrade pip
+          pip install psycopg2-binary requests python-dotenv
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Script çalıştır
+      - name: Run run_all.py
+        working-directory: /opt/anlik_guncel
+        env:
+          PG_DB_USER: ${{ secrets.PG_DB_USER }}
+          PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          PG_HOST: ${{ secrets.PG_HOST }}
+          PG_PORT: ${{ secrets.PG_PORT }}
+          PG_NAME: ${{ secrets.PG_NAME }}
+          PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
+          MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          python ./df_satis/run_all.py
