@@ -9,4 +9,4 @@ jobs:
     steps:
       - name: Test 5432
         run: |
-          node -e "const net = require('net'); const s = net.connect(5432, 'aws-0-eu-central-1.pooler.supabase.com', () => { console.log('5432 AÇIK ✅'); s.destroy(); }); s.on('error', e => console.log('5432 KAPALI ❌:', e.message));"
+          node -e "const net = require('net'); const s = net.connect(6543, 'aws-0-eu-central-1.pooler.supabase.com', () => { console.log('6543 AÇIK ✅'); s.destroy(); }); s.on('error', e => console.log('6543 KAPALI ❌:', e.message));"
