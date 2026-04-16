@@ -1,13 +1,10 @@
 name: concurrent_run_ana_api_matrix_ub
-
 on:
   workflow_dispatch:
-
 jobs:
-  scrape:
+  reset:
     runs-on: ubicloud-standard-2
-    timeout-minutes: 120
-
+    timeout-minutes: 30
     env:
       PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
       PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}
@@ -21,30 +18,8 @@ jobs:
       PROXY_PORT: ${{ secrets.PROXY_PORT }}
       PROXY_USER: ${{ secrets.PROXY_USER }}
       PROXY_PASS: ${{ secrets.PROXY_PASS }}
-      PG_SCRPEANT: ${{ secrets.PG_SCRPEANT }} 
+      PG_SCRPEANT: ${{ secrets.PG_SCRPEANT }}
       NODE_OPTIONS: --unhandled-rejections=strict
-
-    strategy:
-      max-parallel: 14
-      fail-fast: false
-      matrix:
-        script: [
-          "scrape_api_tum_concurrent_ana1.mjs",
-          "scrape_api_tum_concurrent_ana2.mjs",
-          "scrape_api_tum_concurrent_ana3.mjs",
-          "scrape_api_tum_concurrent_ana4.mjs",
-          "scrape_api_tum_concurrent_ana5.mjs",
-          "scrape_api_tum_concurrent_ana6.mjs",
-          "scrape_api_tum_concurrent_ana7.mjs",
-          "scrape_api_tum_concurrent_ana8.mjs",
-          "scrape_api_tum_concurrent_ana9.mjs",
-          "scrape_api_tum_concurrent_ana10.mjs",
-          "scrape_api_tum_concurrent_ana11.mjs",
-          "scrape_api_tum_concurrent_ana12.mjs",
-          "scrape_api_tum_concurrent_ana13.mjs",
-          "scrape_api_tum_concurrent_ana14.mjs"
-        ]
-
     steps:
       - name: Get/Update private code
         run: |
@@ -58,23 +33,71 @@ jobs:
           else
             git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /opt/anlik_guncel
           fi
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-
       - name: Install dependencies
         working-directory: /opt/anlik_guncel
         run: npm ci --prefer-offline --no-audit || npm install --no-audit
+      - name: Run reset_claims
+        working-directory: /opt/anlik_guncel
+        run: |
+          echo "Running reset_claims.mjs..."
+          node ana_links/reset_claims.mjs
 
+  scrape:
+    needs: reset
+    runs-on: ubicloud-standard-2
+    timeout-minutes: 120
+    name: "Parca ${{ matrix.parca_no }}"
+    env:
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}
+      PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
+      PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}
+      PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}
+      PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
+      PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
+      PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
+      PROXY_IP: ${{ secrets.PROXY_IP }}
+      PROXY_PORT: ${{ secrets.PROXY_PORT }}
+      PROXY_USER: ${{ secrets.PROXY_USER }}
+      PROXY_PASS: ${{ secrets.PROXY_PASS }}
+      PG_SCRPEANT: ${{ secrets.PG_SCRPEANT }}
+      PARCA_NO: ${{ matrix.parca_no }}
+      NODE_OPTIONS: --unhandled-rejections=strict
+    strategy:
+      max-parallel: 14
+      fail-fast: false
+      matrix:
+        parca_no: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    steps:
+      - name: Get/Update private code
+        run: |
+          if [ -d "/opt/anlik_guncel" ]; then
+            cd /opt/anlik_guncel
+            git pull https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git main || {
+              cd /opt
+              rm -rf anlik_guncel
+              git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git
+            }
+          else
+            git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /opt/anlik_guncel
+          fi
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        working-directory: /opt/anlik_guncel
+        run: npm ci --prefer-offline --no-audit || npm install --no-audit
       - name: Install Chrome
         uses: browser-actions/setup-chrome@latest
         with:
           chrome-version: stable
-
-      - name: Run scraper - ${{ matrix.script }}
+      - name: Run scraper - Parca ${{ matrix.parca_no }}
         working-directory: /opt/anlik_guncel
         run: |
-          echo "Running scraper: ${{ matrix.script }}"
-          node ana_links/${{ matrix.script }}
+          echo "Running scraper: parca_no=${{ matrix.parca_no }}"
+          node ana_links/scrape_api_tum_concurrent.mjs
