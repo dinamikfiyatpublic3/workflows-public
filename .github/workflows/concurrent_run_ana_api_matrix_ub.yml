@@ -23,25 +23,26 @@ jobs:
     steps:
       - name: Get/Update private code
         run: |
-          if [ -d "/opt/anlik_guncel" ]; then
-            cd /opt/anlik_guncel
+          if [ -d "/workspaces/anlik_guncel" ]; then
+            cd /workspaces/anlik_guncel
             git pull https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git main || {
-              cd /opt
+              cd /workspaces
               rm -rf anlik_guncel
               git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git
             }
           else
-            git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /opt/anlik_guncel
+            mkdir -p /workspaces
+            git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /workspaces/anlik_guncel
           fi
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
       - name: Install dependencies
-        working-directory: /opt/anlik_guncel
+        working-directory: /workspaces/anlik_guncel
         run: npm ci --prefer-offline --no-audit || npm install --no-audit
       - name: Run reset_claims
-        working-directory: /opt/anlik_guncel
+        working-directory: /workspaces/anlik_guncel
         run: |
           echo "Running reset_claims.mjs..."
           node ana_links/reset_claims.mjs
@@ -75,29 +76,22 @@ jobs:
     steps:
       - name: Get/Update private code
         run: |
-          if [ -d "/opt/anlik_guncel" ]; then
-            cd /opt/anlik_guncel
+          if [ -d "/workspaces/anlik_guncel" ]; then
+            cd /workspaces/anlik_guncel
             git pull https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git main || {
-              cd /opt
+              cd /workspaces
               rm -rf anlik_guncel
               git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git
             }
           else
-            git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /opt/anlik_guncel
+            mkdir -p /workspaces
+            git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /workspaces/anlik_guncel
           fi
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
       - name: Install dependencies
-        working-directory: /opt/anlik_guncel
+        working-directory: /workspaces/anlik_guncel
         run: npm ci --prefer-offline --no-audit || npm install --no-audit
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@latest
-        with:
-          chrome-version: stable
       - name: Run scraper - Parca ${{ matrix.parca_no }}
-        working-directory: /opt/anlik_guncel
+        working-directory: /workspaces/anlik_guncel
         run: |
           echo "Running scraper: parca_no=${{ matrix.parca_no }}"
           node ana_links/scrape_api_tum_concurrent.mjs
