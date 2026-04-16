@@ -87,9 +87,17 @@ jobs:
             mkdir -p /workspaces
             git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /workspaces/anlik_guncel
           fi
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: Install dependencies
         working-directory: /workspaces/anlik_guncel
         run: npm ci --prefer-offline --no-audit || npm install --no-audit
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
       - name: Run scraper - Parca ${{ matrix.parca_no }}
         working-directory: /workspaces/anlik_guncel
         run: |
