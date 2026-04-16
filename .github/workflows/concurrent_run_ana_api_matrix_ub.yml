@@ -28,10 +28,9 @@ jobs:
             git pull https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git main || {
               cd $GITHUB_WORKSPACE
               rm -rf anlik_guncel
-              git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git
+              git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git $GITHUB_WORKSPACE/anlik_guncel
             }
           else
-            mkdir -p $GITHUB_WORKSPACE
             git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git $GITHUB_WORKSPACE/anlik_guncel
           fi
       - name: Set up Node.js
@@ -39,10 +38,10 @@ jobs:
         with:
           node-version: '24'
       - name: Install dependencies
-        working-directory: $GITHUB_WORKSPACE/anlik_guncel
+        working-directory: ${{ github.workspace }}/anlik_guncel
         run: npm ci --prefer-offline --no-audit || npm install --no-audit
       - name: Run reset_claims
-        working-directory: $GITHUB_WORKSPACE/anlik_guncel
+        working-directory: ${{ github.workspace }}/anlik_guncel
         run: |
           echo "Running reset_claims.mjs..."
           node ana_links/reset_claims.mjs
@@ -72,7 +71,7 @@ jobs:
       max-parallel: 14
       fail-fast: false
       matrix:
-        parca_no: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        parca_no: [1,2,3,4,5,6,7,8,9,10,11,12,13,14]
     steps:
       - name: Get/Update private code
         run: |
@@ -81,10 +80,9 @@ jobs:
             git pull https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git main || {
               cd $GITHUB_WORKSPACE
               rm -rf anlik_guncel
-              git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git
+              git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git $GITHUB_WORKSPACE/anlik_guncel
             }
           else
-            mkdir -p $GITHUB_WORKSPACE
             git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git $GITHUB_WORKSPACE/anlik_guncel
           fi
       - name: Set up Node.js
@@ -92,14 +90,14 @@ jobs:
         with:
           node-version: '24'
       - name: Install dependencies
-        working-directory: $GITHUB_WORKSPACE/anlik_guncel
+        working-directory: ${{ github.workspace }}/anlik_guncel
         run: npm ci --prefer-offline --no-audit || npm install --no-audit
       - name: Install Chrome
         uses: browser-actions/setup-chrome@latest
         with:
           chrome-version: stable
       - name: Run scraper - Parca ${{ matrix.parca_no }}
-        working-directory: $GITHUB_WORKSPACE/anlik_guncel
+        working-directory: ${{ github.workspace }}/anlik_guncel
         run: |
           echo "Running scraper: parca_no=${{ matrix.parca_no }}"
           node ana_links/scrape_api_tum_concurrent.mjs
