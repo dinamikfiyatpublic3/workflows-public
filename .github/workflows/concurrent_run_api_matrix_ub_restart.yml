@@ -6,7 +6,7 @@ on:
 jobs:
   scrape:
     runs-on: ubicloud-standard-2
-    timeout-minutes: 45
+    timeout-minutes: 35
 
     env:
       CI: true
