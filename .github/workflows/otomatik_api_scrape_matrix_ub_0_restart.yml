@@ -6,7 +6,7 @@ on:
 jobs:
   run-python-script:
     runs-on: ubicloud-standard-2
-    timeout-minutes: 95
+    timeout-minutes: 60
 
     steps:
       # Private repo'dan kod çek/güncelle
