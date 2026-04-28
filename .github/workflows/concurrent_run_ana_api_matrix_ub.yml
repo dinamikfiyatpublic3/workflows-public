@@ -34,7 +34,7 @@ jobs:
             git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git $GITHUB_WORKSPACE/anlik_guncel
           fi
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
       - name: Install dependencies
@@ -86,7 +86,7 @@ jobs:
             git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git $GITHUB_WORKSPACE/anlik_guncel
           fi
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
       - name: Install dependencies
