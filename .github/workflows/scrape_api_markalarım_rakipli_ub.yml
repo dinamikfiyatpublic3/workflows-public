@@ -78,9 +78,9 @@ jobs:
 
       # Node.js
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24'
 
       # Dependencies
       - name: Install dependencies
