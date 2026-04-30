@@ -92,13 +92,13 @@ jobs:
         run: |
           sudo rm -rf /tmp/puppeteer_*
 
-      # 📦 Dependencies (repo + fallback)
+      # 📦 Dependencies
       - name: Install dependencies
         working-directory: /opt/anlik_guncel
         run: |
           npm ci --prefer-offline || npm install
 
-      # 🔥 CRITICAL FIX (eksik puppeteer paketleri)
+      # 🔥 Puppeteer deps
       - name: Ensure puppeteer deps
         working-directory: /opt/anlik_guncel
         run: |
@@ -112,7 +112,7 @@ jobs:
       - name: Install Xvfb
         run: sudo apt-get install -y xvfb
 
-      # 🔍 Debug (opsiyonel ama çok faydalı)
+      # 🔍 Debug
       - name: Debug installed modules
         working-directory: /opt/anlik_guncel
         run: |
@@ -121,9 +121,9 @@ jobs:
           echo "Check rebrowser:"
           ls -la node_modules | grep rebrowser || echo "rebrowser NOT FOUND"
 
-      # 🚀 Run
+      # 🚀 Run scraper (HEADFUL + Xvfb)
       - name: Run scraper
         working-directory: /opt/anlik_guncel
         run: |
           echo "▶️ Running: ${{ matrix.script }}"
-          node "./${{ matrix.script }}"
+          xvfb-run -a -s "-screen 0 1920x1080x24" node "./${{ matrix.script }}"
