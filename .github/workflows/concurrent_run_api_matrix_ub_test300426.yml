@@ -1,5 +1,4 @@
 name: concurrent_run_api_matrix_ub_test300426
-
 on:
   workflow_dispatch:
 
@@ -63,7 +62,7 @@ jobs:
         with:
           node-version: '24'
 
-      # 🧱 System deps + locale
+      # 🧱 System deps
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -84,15 +83,35 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
 
-      # 🧹 tmp cleanup (çok önemli)
+      # 🧹 tmp cleanup
       - name: Cleanup temp
         run: |
           sudo rm -rf /tmp/puppeteer_*
 
-      # 📦 Dependencies
+      # 📦 Dependencies (repo + fallback)
       - name: Install dependencies
         working-directory: /opt/anlik_guncel
-        run: npm ci --prefer-offline || npm install
+        run: |
+          npm ci --prefer-offline || npm install
+
+      # 🔥 CRITICAL FIX (eksik puppeteer paketleri)
+      - name: Ensure puppeteer deps
+        working-directory: /opt/anlik_guncel
+        run: |
+          npm install \
+            rebrowser-puppeteer-core@latest \
+            puppeteer-extra \
+            puppeteer-extra-plugin-stealth \
+            puppeteer-extra-plugin-anonymize-ua
+
+      # 🔍 Debug (opsiyonel ama çok faydalı)
+      - name: Debug installed modules
+        working-directory: /opt/anlik_guncel
+        run: |
+          echo "Node version:"
+          node -v
+          echo "Check rebrowser:"
+          ls -la node_modules | grep rebrowser || echo "rebrowser NOT FOUND"
 
       # 🚀 Run
       - name: Run scraper
