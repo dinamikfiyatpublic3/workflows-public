@@ -108,6 +108,10 @@ jobs:
             puppeteer-extra-plugin-stealth \
             puppeteer-extra-plugin-anonymize-ua
 
+      # 🧪 Install Xvfb
+      - name: Install Xvfb
+        run: sudo apt-get install -y xvfb
+
       # 🔍 Debug (opsiyonel ama çok faydalı)
       - name: Debug installed modules
         working-directory: /opt/anlik_guncel
