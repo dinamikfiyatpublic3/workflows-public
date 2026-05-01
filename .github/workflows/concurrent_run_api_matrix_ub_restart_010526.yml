@@ -1,4 +1,4 @@
-name: concurrent_run_api_matrix_ub_restart
+name: concurrent_run_api_matrix_ub_restart_010526
 
 on:
   workflow_dispatch:
@@ -14,10 +14,6 @@ jobs:
       LANG: tr_TR.UTF-8
       LC_ALL: tr_TR.UTF-8
       LANGUAGE: tr_TR:tr
-
-      # 🔥 CRITICAL
-      CHROME_EXECUTABLE_PATH: /usr/bin/google-chrome
-
       PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}
       PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}
       PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}
@@ -66,7 +62,7 @@ jobs:
         ]
 
     steps:
-      # 🔄 Repo çek/güncelle
+      # Private repo'dan kod çek/güncelle
       - name: Get/Update private code
         run: |
           if [ -d "/opt/anlik_guncel" ]; then
@@ -74,76 +70,46 @@ jobs:
             git pull https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git main || {
               cd /opt
               rm -rf anlik_guncel
-              git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /opt/anlik_guncel
+              git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git
             }
           else
             git clone https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/dinamikfiyatpublic3/anlik_guncel.git /opt/anlik_guncel
           fi
 
-      # 🟢 Node
+      # Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
 
-      # 🧱 System deps
+      # Locale ve sistem paketleri
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            locales tzdata \
-            libnss3 libxss1 libasound2t64 fonts-liberation \
+            locales tzdata xvfb libnss3 libxss1 libasound2t64 fonts-liberation \
             libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libgbm1 libnspr4 \
             libxcomposite1 libxrandr2 libxdamage1 libxfixes3 \
             libpango-1.0-0 libpangocairo-1.0-0 libgtk-3-0
-
+          
           sudo locale-gen tr_TR.UTF-8
           sudo update-locale LANG=tr_TR.UTF-8 LC_ALL=tr_TR.UTF-8 LANGUAGE=tr_TR:tr
           sudo timedatectl set-timezone Europe/Istanbul
 
-      # 🔥 Chrome (STABLE)
-      - name: Install Google Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-
-      # 🧹 tmp cleanup
-      - name: Cleanup temp
-        run: |
-          sudo rm -rf /tmp/puppeteer_*
-
-      # 📦 Dependencies
+      # Dependencies
       - name: Install dependencies
         working-directory: /opt/anlik_guncel
-        run: |
-          npm ci --prefer-offline || npm install
+        run: npm ci --prefer-offline || npm install
 
-      # 🔥 Puppeteer deps
-      - name: Ensure puppeteer deps
-        working-directory: /opt/anlik_guncel
-        run: |
-          npm install \
-            rebrowser-puppeteer-core@latest \
-            puppeteer-extra \
-            puppeteer-extra-plugin-stealth \
-            puppeteer-extra-plugin-anonymize-ua
+      # Chrome
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
 
-      # 🧪 Install Xvfb
-      - name: Install Xvfb
-        run: sudo apt-get install -y xvfb
-
-      # 🔍 Debug
-      - name: Debug installed modules
-        working-directory: /opt/anlik_guncel
-        run: |
-          echo "Node version:"
-          node -v
-          echo "Check rebrowser:"
-          ls -la node_modules | grep rebrowser || echo "rebrowser NOT FOUND"
-
-      # 🚀 Run scraper (HEADFUL + Xvfb)
+      # Script çalıştır
       - name: Run scraper
         working-directory: /opt/anlik_guncel
         run: |
           echo "▶️ Running: ${{ matrix.script }}"
-          xvfb-run -a -s "-screen 0 1920x1080x24" node "./${{ matrix.script }}"
+          xvfb-run -a node "./${{ matrix.script }}"
