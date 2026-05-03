@@ -42,7 +42,7 @@ jobs:
     strategy:
       matrix:
         script: [
-          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_1_test300426.mjs"
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_1_test030526.mjs"
         ]
 
     steps:
