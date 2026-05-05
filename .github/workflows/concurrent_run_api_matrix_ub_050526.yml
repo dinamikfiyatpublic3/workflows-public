@@ -89,10 +89,14 @@ jobs:
       # 🧱 System deps
       - name: Install system dependencies
         run: |
-          printf 'Acquire::http::Timeout "10";\nAcquire::https::Timeout "10";\nAcquire::Retries "1";\n' | sudo tee /etc/apt/apt.conf.d/99fix > /dev/null
-          sudo rm -f /etc/apt/apt-mirrors.txt
-          sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
-          printf 'deb https://archive.ubuntu.com/ubuntu noble main restricted universe multiverse\ndeb https://archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse\ndeb https://archive.ubuntu.com/ubuntu noble-backports main restricted universe multiverse\ndeb https://archive.ubuntu.com/ubuntu noble-security main restricted universe multiverse\n' | sudo tee /etc/apt/sources.list > /dev/null
+          # Timeout ayarı - Azure yavaşsa hemen geç
+          sudo tee /etc/apt/apt.conf.d/99fix > /dev/null << 'EOF'
+          Acquire::http::Timeout "10";
+          Acquire::https::Timeout "10";
+          Acquire::Retries "1";
+          EOF
+
+          # Zaten kurulu olanları atla, sadece eksik olanları kur
           MISSING=""
           for pkg in locales tzdata libnss3 libxss1 libasound2t64 fonts-liberation \
             libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libgbm1 libnspr4 \
@@ -101,13 +105,18 @@ jobs:
             xvfb google-chrome-stable; do
             dpkg -s "$pkg" &>/dev/null || MISSING="$MISSING $pkg"
           done
+
           if [ -n "$MISSING" ]; then
             echo "Eksik paketler: $MISSING"
+            sudo truncate -s 0 /etc/apt/apt-mirrors.txt 2>/dev/null || true
+            sudo find /etc/apt -type f \( -name "*.list" -o -name "*.sources" \) \
+              -exec sudo sed -i 's|http://azure.archive.ubuntu.com|https://archive.ubuntu.com|g' {} \;
             sudo apt-get update
             sudo apt-get install -y $MISSING
           else
             echo "✅ Tüm paketler zaten kurulu, apt atlanıyor"
           fi
+
           sudo locale-gen tr_TR.UTF-8 || true
           sudo update-locale LANG=tr_TR.UTF-8 LC_ALL=tr_TR.UTF-8 LANGUAGE=tr_TR:tr
           sudo timedatectl set-timezone Europe/Istanbul
