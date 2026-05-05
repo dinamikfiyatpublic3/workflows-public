@@ -91,10 +91,10 @@ jobs:
         run: |
           # Timeout ayarı - Azure yavaşsa hemen geç
           sudo tee /etc/apt/apt.conf.d/99fix > /dev/null << 'EOF'
-Acquire::http::Timeout "10";
-Acquire::https::Timeout "10";
-Acquire::Retries "1";
-EOF
+          Acquire::http::Timeout "10";
+          Acquire::https::Timeout "10";
+          Acquire::Retries "1";
+          EOF
 
           # Zaten kurulu olanları atla, sadece eksik olanları kur
           MISSING=""
