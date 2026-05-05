@@ -89,26 +89,35 @@ jobs:
       # 🧱 System deps
       - name: Install system dependencies
         run: |
-          # apt-mirrors.txt + ubuntu.sources içindeki Azure adresini temizle
-          sudo sed -i 's|http://azure.archive.ubuntu.com|https://archive.ubuntu.com|g' /etc/apt/apt-mirrors.txt 2>/dev/null || true
-          sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
-          sudo tee /etc/apt/sources.list > /dev/null << 'EOF'
-deb https://archive.ubuntu.com/ubuntu noble main restricted universe multiverse
-deb https://archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse
-deb https://archive.ubuntu.com/ubuntu noble-backports main restricted universe multiverse
-deb https://archive.ubuntu.com/ubuntu noble-security main restricted universe multiverse
+          # Timeout ayarı - Azure yavaşsa hemen geç
+          sudo tee /etc/apt/apt.conf.d/99fix > /dev/null << 'EOF'
+Acquire::http::Timeout "10";
+Acquire::https::Timeout "10";
+Acquire::Retries "1";
 EOF
 
-          sudo apt-get update
-          sudo apt-get install -y \
-            locales tzdata \
-            libnss3 libxss1 libasound2t64 fonts-liberation \
+          # Zaten kurulu olanları atla, sadece eksik olanları kur
+          MISSING=""
+          for pkg in locales tzdata libnss3 libxss1 libasound2t64 fonts-liberation \
             libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libgbm1 libnspr4 \
             libxcomposite1 libxrandr2 libxdamage1 libxfixes3 \
             libpango-1.0-0 libpangocairo-1.0-0 libgtk-3-0 \
-            xvfb google-chrome-stable
+            xvfb google-chrome-stable; do
+            dpkg -s "$pkg" &>/dev/null || MISSING="$MISSING $pkg"
+          done
 
-          sudo locale-gen tr_TR.UTF-8
+          if [ -n "$MISSING" ]; then
+            echo "Eksik paketler: $MISSING"
+            sudo truncate -s 0 /etc/apt/apt-mirrors.txt 2>/dev/null || true
+            sudo find /etc/apt -type f \( -name "*.list" -o -name "*.sources" \) \
+              -exec sudo sed -i 's|http://azure.archive.ubuntu.com|https://archive.ubuntu.com|g' {} \;
+            sudo apt-get update
+            sudo apt-get install -y $MISSING
+          else
+            echo "✅ Tüm paketler zaten kurulu, apt atlanıyor"
+          fi
+
+          sudo locale-gen tr_TR.UTF-8 || true
           sudo update-locale LANG=tr_TR.UTF-8 LC_ALL=tr_TR.UTF-8 LANGUAGE=tr_TR:tr
           sudo timedatectl set-timezone Europe/Istanbul
 
