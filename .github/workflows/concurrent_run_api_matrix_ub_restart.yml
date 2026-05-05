@@ -89,23 +89,28 @@ jobs:
       # 🧱 System deps
       - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            locales tzdata \
-            libnss3 libxss1 libasound2t64 fonts-liberation \
+          printf 'Acquire::http::Timeout "10";\nAcquire::https::Timeout "10";\nAcquire::Retries "1";\n' | sudo tee /etc/apt/apt.conf.d/99fix > /dev/null
+          sudo rm -f /etc/apt/apt-mirrors.txt
+          sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
+          printf 'deb https://archive.ubuntu.com/ubuntu noble main restricted universe multiverse\ndeb https://archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse\ndeb https://archive.ubuntu.com/ubuntu noble-backports main restricted universe multiverse\ndeb https://archive.ubuntu.com/ubuntu noble-security main restricted universe multiverse\n' | sudo tee /etc/apt/sources.list > /dev/null
+          MISSING=""
+          for pkg in locales tzdata libnss3 libxss1 libasound2t64 fonts-liberation \
             libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libgbm1 libnspr4 \
             libxcomposite1 libxrandr2 libxdamage1 libxfixes3 \
-            libpango-1.0-0 libpangocairo-1.0-0 libgtk-3-0
-
-          sudo locale-gen tr_TR.UTF-8
-          sudo update-locale LANG=tr_TR.UTF-8 LC_ALL=tr_TR.UTF-8 LANGUAGE=tr_TR:tr
+            libpango-1.0-0 libpangocairo-1.0-0 libgtk-3-0 \
+            xvfb google-chrome-stable; do
+            dpkg -s "$pkg" &>/dev/null || MISSING="$MISSING $pkg"
+          done
+          if [ -n "$MISSING" ]; then
+            echo "Eksik paketler: $MISSING"
+            sudo apt-get update
+            sudo apt-get install -y $MISSING
+          else
+            echo "✅ Tüm paketler zaten kurulu, apt atlanıyor"
+          fi
+          sudo locale-gen tr_TR.UTF-8 || true
+          sudo update-locale LANG=tr_TR.UTF-8 LC_ALL=tr_ALL.UTF-8 LANGUAGE=tr_TR:tr
           sudo timedatectl set-timezone Europe/Istanbul
-
-      # 🔥 Chrome (STABLE)
-      - name: Install Google Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
 
       # 🧹 tmp cleanup
       - name: Cleanup temp
@@ -127,10 +132,6 @@ jobs:
             puppeteer-extra \
             puppeteer-extra-plugin-stealth \
             puppeteer-extra-plugin-anonymize-ua
-
-      # 🧪 Install Xvfb
-      - name: Install Xvfb
-        run: sudo apt-get install -y xvfb
 
       # 🔍 Debug
       - name: Debug installed modules
