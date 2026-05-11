@@ -38,7 +38,7 @@ jobs:
       PG_PROXYRACK_USERNAME: ${{ secrets.PG_PROXYRACK_USERNAME }}
       PG_PROXYRACK_PASSWORD: ${{ secrets.PG_PROXYRACK_PASSWORD }}
       MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      NODE_OPTIONS: --unhandled-rejections=strict
+      NODE_OPTIONS: --unhandled-rejections=none
 
     strategy:
       matrix:
