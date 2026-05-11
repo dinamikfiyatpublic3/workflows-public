@@ -41,6 +41,7 @@ jobs:
       NODE_OPTIONS: --unhandled-rejections=none
 
     strategy:
+      fail-fast: false
       matrix:
         script: [
           "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_1.mjs",
