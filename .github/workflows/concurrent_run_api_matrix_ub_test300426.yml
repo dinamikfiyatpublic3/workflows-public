@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         script: [
-          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_1_test110526.mjs"
+          "tests/rakipler_parcalar/scrape_api_urunlerim_rakipler_parca_1_test130526.mjs"
         ]
 
     steps:
